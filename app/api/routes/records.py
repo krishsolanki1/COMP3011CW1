@@ -1,11 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
-from app.db.session import get_db
-from app.crud import models as crud_models
-from app.crud import records as crud_records
-from app.schemas.records import MarketRecordCreate, MarketRecordOut
+from app.api.deps import get_car_model_or_404_path
 from app.core.security import require_api_key
+from app.crud import records as crud_records
+from app.db.models import CarModel
+from app.db.session import get_db
+from app.schemas.records import MarketRecordCreate, MarketRecordOut
 
 router = APIRouter()
 
@@ -13,12 +14,14 @@ router = APIRouter()
 @router.get(
     "/{model_id}/records",
     response_model=list[MarketRecordOut],
+    summary="List market records for a model",
 )
-def list_records_for_model(model_id: int, db: Session = Depends(get_db)):
-    car_model = crud_models.get_car_model(db, model_id)
-    if not car_model:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Model not found")
-    return list(crud_records.list_records_for_model(db, car_model_id=model_id))
+def list_records_for_model(
+    car_model: CarModel = Depends(get_car_model_or_404_path),
+    db: Session = Depends(get_db),
+):
+    # CW1 polish: the dependency guarantees model exists (otherwise 404).
+    return list(crud_records.list_records_for_model(db, car_model_id=car_model.id))
 
 
 @router.post(
@@ -26,20 +29,16 @@ def list_records_for_model(model_id: int, db: Session = Depends(get_db)):
     response_model=MarketRecordOut,
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(require_api_key)],
+    summary="Create a market record for a model (API key required)",
 )
-
 def create_record_for_model(
-    model_id: int,
     payload: MarketRecordCreate,
+    car_model: CarModel = Depends(get_car_model_or_404_path),
     db: Session = Depends(get_db),
 ):
-    car_model = crud_models.get_car_model(db, model_id)
-    if not car_model:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Model not found")
-
     obj = crud_records.create_record_for_model(
         db,
-        car_model_id=model_id,
+        car_model_id=car_model.id,
         year=payload.year,
         price=payload.price,
     )
