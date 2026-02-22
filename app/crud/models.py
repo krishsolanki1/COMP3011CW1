@@ -1,9 +1,14 @@
-from typing import Sequence
+from __future__ import annotations
+
+from typing import Any, Sequence
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.models import CarModel
+
+# CW1 polish: keep an explicit allow-list for updates to avoid accidental attribute writes
+_UPDATABLE_FIELDS = {"name", "series", "body_style", "fuel_type", "transmission"}
 
 
 def list_car_models(db: Session) -> Sequence[CarModel]:
@@ -17,19 +22,15 @@ def get_car_model(db: Session, car_model_id: int) -> CarModel | None:
 
 def create_car_model(
     db: Session,
-    *,
-    name: str,
-    series: str | None,
-    body_style: str | None,
-    fuel_type: str | None,
-    transmission: str | None,
+    **data: Any,
 ) -> CarModel:
+    # CW1 polish: allows routes to do create_car_model(db, **payload.model_dump())
     obj = CarModel(
-        name=name,
-        series=series,
-        body_style=body_style,
-        fuel_type=fuel_type,
-        transmission=transmission,
+        name=data.get("name"),
+        series=data.get("series"),
+        body_style=data.get("body_style"),
+        fuel_type=data.get("fuel_type"),
+        transmission=data.get("transmission"),
     )
     db.add(obj)
     db.commit()
@@ -40,23 +41,14 @@ def create_car_model(
 def update_car_model(
     db: Session,
     car_model: CarModel,
-    *,
-    name: str | None,
-    series: str | None,
-    body_style: str | None,
-    fuel_type: str | None,
-    transmission: str | None,
+    **updates: Any,
 ) -> CarModel:
-    if name is not None:
-        car_model.name = name
-    if series is not None:
-        car_model.series = series
-    if body_style is not None:
-        car_model.body_style = body_style
-    if fuel_type is not None:
-        car_model.fuel_type = fuel_type
-    if transmission is not None:
-        car_model.transmission = transmission
+    # CW1 polish: PATCH correctness.
+    # The route should pass payload.model_dump(exclude_unset=True) so we ONLY update provided fields,
+    # but we still allow explicit None (client sends null) to clear a field.
+    for key, value in updates.items():
+        if key in _UPDATABLE_FIELDS:
+            setattr(car_model, key, value)
 
     db.add(car_model)
     db.commit()

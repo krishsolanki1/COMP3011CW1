@@ -20,7 +20,6 @@ def list_records_for_model(
     car_model: CarModel = Depends(get_car_model_or_404_path),
     db: Session = Depends(get_db),
 ):
-    # CW1 polish: the dependency guarantees model exists (otherwise 404).
     return list(crud_records.list_records_for_model(db, car_model_id=car_model.id))
 
 
@@ -36,10 +35,6 @@ def create_record_for_model(
     car_model: CarModel = Depends(get_car_model_or_404_path),
     db: Session = Depends(get_db),
 ):
-    obj = crud_records.create_record_for_model(
-        db,
-        car_model_id=car_model.id,
-        year=payload.year,
-        price=payload.price,
-    )
+    # CW1 polish: avoids repeating each field manually
+    obj = crud_records.create_record_for_model(db, car_model_id=car_model.id, **payload.model_dump())
     return obj

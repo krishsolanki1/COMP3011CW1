@@ -24,14 +24,8 @@ def list_models(db: Session = Depends(get_db)):
     summary="Create a new car model (API key required)",
 )
 def create_model(payload: CarModelCreate, db: Session = Depends(get_db)):
-    obj = crud_models.create_car_model(
-        db,
-        name=payload.name,
-        series=payload.series,
-        body_style=payload.body_style,
-        fuel_type=payload.fuel_type,
-        transmission=payload.transmission,
-    )
+    # CW1 polish: avoids repeating each field manually
+    obj = crud_models.create_car_model(db, **payload.model_dump())
     return obj
 
 
@@ -41,7 +35,6 @@ def create_model(payload: CarModelCreate, db: Session = Depends(get_db)):
     summary="Get a car model by ID",
 )
 def get_model(car_model: CarModel = Depends(get_car_model_or_404_path)):
-    # CW1 polish: model lookup + 404 is handled in get_car_model_or_404_path
     return car_model
 
 
@@ -56,15 +49,16 @@ def update_model(
     car_model: CarModel = Depends(get_car_model_or_404_path),
     db: Session = Depends(get_db),
 ):
-    obj = crud_models.update_car_model(
-        db,
-        car_model,
-        name=payload.name,
-        series=payload.series,
-        body_style=payload.body_style,
-        fuel_type=payload.fuel_type,
-        transmission=payload.transmission,
-    )
+    # CW1 polish: PATCH semantics done properly:
+    # - omit field => do not modify it
+    # - send null => explicitly clear it
+    updates = payload.model_dump(exclude_unset=True)
+
+    # If someone sends an empty PATCH body, just return the existing resource.
+    if not updates:
+        return car_model
+
+    obj = crud_models.update_car_model(db, car_model, **updates)
     return obj
 
 
@@ -78,6 +72,5 @@ def delete_model(
     car_model: CarModel = Depends(get_car_model_or_404_path),
     db: Session = Depends(get_db),
 ):
-    # CW1 polish: also indirectly tests cascade delete of related MarketRecords (if present).
     crud_models.delete_car_model(db, car_model)
     return None

@@ -1,4 +1,6 @@
-from typing import Sequence
+from __future__ import annotations
+
+from typing import Any, Sequence
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -19,13 +21,13 @@ def create_record_for_model(
     db: Session,
     *,
     car_model_id: int,
-    year: int,
-    price: float,
+    **data: Any,
 ) -> MarketRecord:
+    # CW1 polish: allows routes to do create_record_for_model(db, car_model_id=id, **payload.model_dump())
     obj = MarketRecord(
         car_model_id=car_model_id,
-        year=year,
-        price=price,
+        year=data.get("year"),
+        price=data.get("price"),
     )
     db.add(obj)
     db.commit()
