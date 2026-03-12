@@ -3,7 +3,6 @@ import os
 import pytest
 from fastapi.testclient import TestClient
 
-# (Doesn't override .env or real environment if already set.)
 os.environ.setdefault("DATABASE_URL", "sqlite:///./app.db")
 os.environ.setdefault("API_KEY", "change-me")
 

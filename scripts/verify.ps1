@@ -1,4 +1,3 @@
-# scripts/verify.ps1
 param(
   [switch]$ResetDb
 )
