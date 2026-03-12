@@ -1,3 +1,4 @@
+import argparse
 import csv
 from pathlib import Path
 import sys
@@ -6,12 +7,20 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
-    
+
 from app.db.session import SessionLocal
 from app.db.models import CarModel, MarketRecord
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description="Import BMW dataset into the database.")
+    parser.add_argument(
+        "--reset",
+        action="store_true",
+        help="Wipe existing CarModel and MarketRecord rows before importing.",
+    )
+    args = parser.parse_args()
+
     project_root = Path(__file__).resolve().parents[1]
     csv_path = project_root / "bmw.csv"
 
@@ -21,6 +30,12 @@ def main() -> None:
     session = SessionLocal()
 
     try:
+        if args.reset:
+            session.query(MarketRecord).delete()
+            session.query(CarModel).delete()
+            session.commit()
+            print("Database reset: all existing rows removed.")
+
         # Cache for CarModel rows (so we don't create duplicates)
         models_cache: dict[str, CarModel] = {}
 

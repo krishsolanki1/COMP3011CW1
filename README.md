@@ -89,6 +89,13 @@ If you just want to verify everything end-to-end (deps → migrations → seed �
 **Windows (PowerShell)**
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\verify.ps1 -ResetDb
+```
+
+**macOS/Linux**
+```bash
+bash scripts/verify.sh --reset
+```
+
 ---
 
 ## Tech stack
