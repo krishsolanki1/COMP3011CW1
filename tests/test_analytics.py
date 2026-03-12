@@ -54,3 +54,31 @@ def test_top_models_for_year(client):
     assert "model_name" in first
     assert "average_price" in first
     assert "num_records" in first
+
+
+def test_price_trend_for_existing_model(client):
+    model_id, model, _records = _pick_model_with_records(client)
+
+    resp = client.get(f"/analytics/price-trend?model_id={model_id}")
+    assert resp.status_code == 200
+
+    body = resp.json()
+    assert body["model_id"] == model_id
+    assert body["model_name"] == model["name"]
+    assert "trend" in body
+    assert isinstance(body["trend"], list)
+    assert body["trend"], "Expected at least one trend point for a model with records"
+
+    point = body["trend"][0]
+    assert "year" in point
+    assert "average_price" in point
+    assert isinstance(point["average_price"], (int, float))
+    assert "num_records" in point
+    assert point["num_records"] >= 1
+
+
+def test_price_trend_model_not_found(client):
+    missing_id = 999_999_999
+    resp = client.get(f"/analytics/price-trend?model_id={missing_id}")
+    assert resp.status_code == 404
+    assert "detail" in resp.json()

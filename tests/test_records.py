@@ -81,3 +81,79 @@ def test_create_record_model_not_found(client, auth_headers):
     resp = client.post(f"/models/{missing_id}/records", json=payload_record, headers=auth_headers)
     assert resp.status_code == 404
     assert "detail" in resp.json()
+
+
+def _create_model_and_record(client, auth_headers):
+    """Helper: create a fresh model + record, return (model_id, record_id)."""
+    suffix = uuid.uuid4().hex[:8]
+    resp_m = client.post(
+        "/models/",
+        json={"name": f"CRUDTest {suffix}", "series": "5 Series", "body_style": "Saloon",
+              "fuel_type": "Petrol", "transmission": "Automatic"},
+        headers=auth_headers,
+    )
+    assert resp_m.status_code == 201
+    model_id = resp_m.json()["id"]
+
+    resp_r = client.post(
+        f"/models/{model_id}/records",
+        json={"year": 2019, "price": 25000.0},
+        headers=auth_headers,
+    )
+    assert resp_r.status_code == 201
+    return model_id, resp_r.json()["id"]
+
+
+def test_get_single_record_ok(client, auth_headers):
+    model_id, record_id = _create_model_and_record(client, auth_headers)
+    try:
+        resp = client.get(f"/models/{model_id}/records/{record_id}")
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["id"] == record_id
+        assert body["car_model_id"] == model_id
+        assert body["year"] == 2019
+        assert abs(body["price"] - 25000.0) < 0.01
+    finally:
+        client.delete(f"/models/{model_id}", headers=auth_headers)
+
+
+def test_get_single_record_not_found(client, auth_headers):
+    model_id, _ = _create_model_and_record(client, auth_headers)
+    try:
+        resp = client.get(f"/models/{model_id}/records/999999999")
+        assert resp.status_code == 404
+        assert "detail" in resp.json()
+    finally:
+        client.delete(f"/models/{model_id}", headers=auth_headers)
+
+
+def test_patch_record_updates_only_provided_fields(client, auth_headers):
+    model_id, record_id = _create_model_and_record(client, auth_headers)
+    try:
+        # PATCH only price — year must stay unchanged
+        resp = client.patch(
+            f"/models/{model_id}/records/{record_id}",
+            json={"price": 22000.0},
+            headers=auth_headers,
+        )
+        assert resp.status_code == 200
+        body = resp.json()
+        assert abs(body["price"] - 22000.0) < 0.01
+        assert body["year"] == 2019  # unchanged
+        assert body["id"] == record_id
+    finally:
+        client.delete(f"/models/{model_id}", headers=auth_headers)
+
+
+def test_delete_record_ok(client, auth_headers):
+    model_id, record_id = _create_model_and_record(client, auth_headers)
+    try:
+        resp = client.delete(f"/models/{model_id}/records/{record_id}", headers=auth_headers)
+        assert resp.status_code == 204
+
+        # Record should now be gone
+        resp_get = client.get(f"/models/{model_id}/records/{record_id}")
+        assert resp_get.status_code == 404
+    finally:
+        client.delete(f"/models/{model_id}", headers=auth_headers)
