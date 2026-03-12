@@ -12,6 +12,13 @@ class MarketRecordCreate(MarketRecordBase):
     pass
 
 
+class MarketRecordUpdate(BaseModel):
+    # All fields optional — PATCH semantics, mirrors CarModelUpdate
+    year: int | None = Field(default=None, ge=1900, le=2100, description="Observation year.")
+    price: float | None = Field(default=None, gt=0, description="Observed price (> 0).")
+    sales_volume: int | None = Field(default=None, ge=0, description="Optional sales volume (>= 0).")
+
+
 class MarketRecordOut(MarketRecordBase):
     id: int
     car_model_id: int

@@ -7,6 +7,8 @@ from sqlalchemy.orm import Session
 
 from app.db.models import MarketRecord
 
+_UPDATABLE_FIELDS = {"year", "price", "sales_volume"}
+
 
 def list_records_for_model(db: Session, car_model_id: int) -> Sequence[MarketRecord]:
     stmt = (
@@ -17,19 +19,42 @@ def list_records_for_model(db: Session, car_model_id: int) -> Sequence[MarketRec
     return db.scalars(stmt).all()
 
 
+def get_record(db: Session, record_id: int) -> MarketRecord | None:
+    return db.get(MarketRecord, record_id)
+
+
 def create_record_for_model(
     db: Session,
     *,
     car_model_id: int,
     **data: Any,
 ) -> MarketRecord:
-    # CW1 polish: allows routes to do create_record_for_model(db, car_model_id=id, **payload.model_dump())
     obj = MarketRecord(
         car_model_id=car_model_id,
         year=data.get("year"),
         price=data.get("price"),
+        sales_volume=data.get("sales_volume"),  # was silently dropped before
     )
     db.add(obj)
     db.commit()
     db.refresh(obj)
     return obj
+
+
+def update_record(
+    db: Session,
+    record: MarketRecord,
+    **updates: Any,
+) -> MarketRecord:
+    for key, value in updates.items():
+        if key in _UPDATABLE_FIELDS:
+            setattr(record, key, value)
+    db.add(record)
+    db.commit()
+    db.refresh(record)
+    return record
+
+
+def delete_record(db: Session, record: MarketRecord) -> None:
+    db.delete(record)
+    db.commit()
