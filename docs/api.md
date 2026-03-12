@@ -209,7 +209,8 @@ Example Response:
     "id": 20,
     "car_model_id": 1,
     "year": 2018,
-    "price": 19000.0
+    "price": 19000.0,
+    "sales_volume": null
   }
 ]
 
@@ -236,12 +237,99 @@ Example Response (201 Created):
   "id": 25,
   "car_model_id": 1,
   "year": 2018,
-  "price": 19000.0
+  "price": 19000.0,
+  "sales_volume": null
 }
 
 Error (404 Not Found):
 {
   "detail": "Model not found"
+}
+
+---
+
+### GET /models/{id}/records/{record_id}
+
+Path Parameters:
+- id (integer) — car model ID
+- record_id (integer) — market record ID
+
+Description:
+Returns a single market record by ID. Returns 404 if the record does not exist or does not belong to the specified model.
+
+Authentication: Not required
+
+Example Request:
+GET /models/1/records/20
+
+Example Response (200 OK):
+{
+  "id": 20,
+  "car_model_id": 1,
+  "year": 2018,
+  "price": 19000.0,
+  "sales_volume": null
+}
+
+Error (404 Not Found):
+{
+  "detail": "Record not found"
+}
+
+---
+
+### PATCH /models/{id}/records/{record_id}
+
+Path Parameters:
+- id (integer) — car model ID
+- record_id (integer) — market record ID
+
+Authentication: Required
+
+Description:
+Partially updates a market record. Only fields included in the request body are modified; omitted fields are left unchanged.
+
+Request Body Example:
+{
+  "price": 17500.0
+}
+
+Example Request:
+PATCH /models/1/records/20
+
+Example Response (200 OK):
+{
+  "id": 20,
+  "car_model_id": 1,
+  "year": 2018,
+  "price": 17500.0,
+  "sales_volume": null
+}
+
+Error (404 Not Found):
+{
+  "detail": "Record not found"
+}
+
+---
+
+### DELETE /models/{id}/records/{record_id}
+
+Path Parameters:
+- id (integer) — car model ID
+- record_id (integer) — market record ID
+
+Authentication: Required
+
+Example Request:
+DELETE /models/1/records/20
+
+Success Response:
+Status Code: 204 No Content
+
+Error (404 Not Found):
+{
+  "detail": "Record not found"
 }
 
 ---
@@ -323,6 +411,7 @@ Example Response:
 | 204 | Resource deleted |
 | 401 | Invalid or missing API key |
 | 404 | Resource not found |
+| 422 | Validation error (invalid or missing field values) |
 
 ---
 
