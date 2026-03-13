@@ -18,6 +18,7 @@ Built with **FastAPI**, **SQLAlchemy ORM**, **Alembic**, **SQLite**, and **pytes
 - [Run the API](#run-the-api)
 - [Smoke checks (manual)](#smoke-checks-manual)
 - [Testing](#testing)
+- [MCP Server](#mcp-server)
 - [API overview](#api-overview)
 - [Deployment (PythonAnywhere)](#deployment-pythonanywhere)
 - [Troubleshooting](#troubleshooting)
@@ -274,6 +275,51 @@ Test coverage includes:
 - analytics endpoints response shape + correctness over real imported data
 
 The suite is split by feature (`test_health`, `test_models`, `test_records`, `test_analytics`, `test_auth`) to keep it readable and easy to extend.
+
+---
+
+## MCP Server
+
+An [MCP (Model Context Protocol)](https://modelcontextprotocol.io) server is included at `mcp_server.py`. It exposes the BMW analytics API as tools that Claude (and other MCP-compatible AI clients) can call directly.
+
+### Tools exposed
+
+| Tool | Description |
+|---|---|
+| `list_models` | List models with optional `fuel_type`, `transmission`, `name` filters |
+| `get_model` | Get full details for a model by ID |
+| `get_average_price` | Average market price for a model |
+| `get_price_trend` | Year-by-year price trend for a model |
+| `get_top_models` | Top models by average price for a given year |
+
+### Install
+
+```bash
+pip install "mcp>=1.2.0"
+```
+
+### Add to Claude Desktop
+
+Add the following to your `claude_desktop_config.json` (usually at `~/Library/Application Support/Claude/` on macOS or `%APPDATA%\Claude\` on Windows):
+
+```json
+{
+  "mcpServers": {
+    "bmw-market-analytics": {
+      "command": "python",
+      "args": ["C:/path/to/COMP3011CW1/mcp_server.py"]
+    }
+  }
+}
+```
+
+### Run standalone (stdio)
+
+```bash
+python mcp_server.py
+```
+
+The server communicates over stdin/stdout using the MCP protocol.
 
 ---
 
