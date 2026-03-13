@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_car_model_or_404_path, get_record_or_404
@@ -19,8 +19,16 @@ router = APIRouter()
 def list_records_for_model(
     car_model: CarModel = Depends(get_car_model_or_404_path),
     db: Session = Depends(get_db),
+    year: int | None = Query(default=None, ge=1900, le=2100, description="Filter by exact year."),
+    min_price: float | None = Query(default=None, gt=0, description="Minimum price (inclusive)."),
+    max_price: float | None = Query(default=None, gt=0, description="Maximum price (inclusive)."),
+    skip: int = Query(default=0, ge=0, description="Rows to skip (pagination)."),
+    limit: int = Query(default=200, ge=1, le=1000, description="Max rows to return (1–1000)."),
 ):
-    return list(crud_records.list_records_for_model(db, car_model_id=car_model.id))
+    return list(crud_records.list_records_for_model(
+        db, car_model.id, year=year, min_price=min_price,
+        max_price=max_price, skip=skip, limit=limit,
+    ))
 
 
 @router.post(

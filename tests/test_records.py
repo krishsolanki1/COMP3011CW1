@@ -157,3 +157,28 @@ def test_delete_record_ok(client, auth_headers):
         assert resp_get.status_code == 404
     finally:
         client.delete(f"/models/{model_id}", headers=auth_headers)
+
+
+def test_list_records_filter_by_year(client, auth_headers):
+    suffix = uuid.uuid4().hex[:8]
+    resp_m = client.post(
+        "/models/",
+        json={"name": f"YearFilter {suffix}", "series": "3 Series", "body_style": "Saloon",
+              "fuel_type": "Petrol", "transmission": "Manual"},
+        headers=auth_headers,
+    )
+    assert resp_m.status_code == 201
+    model_id = resp_m.json()["id"]
+
+    try:
+        # Create two records in different years
+        client.post(f"/models/{model_id}/records", json={"year": 2019, "price": 15000.0}, headers=auth_headers)
+        client.post(f"/models/{model_id}/records", json={"year": 2021, "price": 18000.0}, headers=auth_headers)
+
+        resp = client.get(f"/models/{model_id}/records?year=2019")
+        assert resp.status_code == 200
+        records = resp.json()
+        assert records, "Expected at least one record for year=2019"
+        assert all(r["year"] == 2019 for r in records)
+    finally:
+        client.delete(f"/models/{model_id}", headers=auth_headers)

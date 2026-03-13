@@ -75,3 +75,19 @@ def test_create_model_authorised(client, auth_headers):
     # cleanup so the DB doesn't bloat forever
     resp_del = client.delete(f"/models/{created_id}", headers=auth_headers)
     assert resp_del.status_code == 204
+
+
+def test_list_models_filter_by_fuel_type(client):
+    resp = client.get("/models/?fuel_type=Diesel")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data, "Expected at least one Diesel model in seeded data"
+    for item in data:
+        assert item["fuel_type"] == "Diesel"
+
+
+def test_list_models_pagination_limit(client):
+    resp = client.get("/models/?limit=2")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert len(data) <= 2

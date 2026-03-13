@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_car_model_or_404_path
@@ -12,8 +12,19 @@ router = APIRouter()
 
 
 @router.get("/", response_model=list[CarModelOut], summary="List all car models")
-def list_models(db: Session = Depends(get_db)):
-    return list(crud_models.list_car_models(db))
+def list_models(
+    db: Session = Depends(get_db),
+    name: str | None = Query(default=None, description="Filter by name (partial, case-insensitive)."),
+    series: str | None = Query(default=None, description="Filter by series (partial, case-insensitive)."),
+    fuel_type: str | None = Query(default=None, description="Filter by fuel type (exact match)."),
+    transmission: str | None = Query(default=None, description="Filter by transmission (exact match)."),
+    skip: int = Query(default=0, ge=0, description="Rows to skip (pagination)."),
+    limit: int = Query(default=100, ge=1, le=500, description="Max rows to return (1–500)."),
+):
+    return list(crud_models.list_car_models(
+        db, name=name, series=series, fuel_type=fuel_type,
+        transmission=transmission, skip=skip, limit=limit,
+    ))
 
 
 @router.post(
