@@ -68,12 +68,22 @@ Example Response (200 OK):
 ### GET /models
 
 Description:
-Returns all car models.
+Returns car models. Supports optional filtering and pagination via query parameters.
 
 Authentication: Not required
 
+Query Parameters:
+| Parameter    | Type    | Default | Description |
+|--------------|---------|---------|-------------|
+| name         | string  | —       | Filter by name (partial, case-insensitive) |
+| series       | string  | —       | Filter by series (partial, case-insensitive) |
+| fuel_type    | string  | —       | Filter by fuel type (exact match) |
+| transmission | string  | —       | Filter by transmission (exact match) |
+| skip         | integer | 0       | Number of rows to skip (pagination) |
+| limit        | integer | 100     | Max rows to return (1–500) |
+
 Example Request:
-GET /models
+GET /models?fuel_type=Diesel&limit=10
 
 Example Response:
 [
@@ -196,12 +206,21 @@ Path Parameter:
 - id (integer)
 
 Description:
-Returns all price records for a model.
+Returns price records for a model. Supports optional filtering and pagination via query parameters.
 
 Authentication: Not required
 
+Query Parameters:
+| Parameter | Type    | Default | Description |
+|-----------|---------|---------|-------------|
+| year      | integer | —       | Filter by exact year (1900–2100) |
+| min_price | float   | —       | Minimum price, inclusive (> 0) |
+| max_price | float   | —       | Maximum price, inclusive (> 0) |
+| skip      | integer | 0       | Number of rows to skip (pagination) |
+| limit     | integer | 200     | Max rows to return (1–1000) |
+
 Example Request:
-GET /models/1/records
+GET /models/1/records?year=2019&min_price=10000
 
 Example Response:
 [

@@ -282,7 +282,7 @@ The suite is split by feature (`test_health`, `test_models`, `test_records`, `te
 - `GET /health` → `{ "status": "ok" }`
 
 ### Models (CarModel)
-- `GET /models/` → list models
+- `GET /models/` → list models (optional: `?name=`, `?series=`, `?fuel_type=`, `?transmission=`, `?skip=`, `?limit=`)
 - `GET /models/{id}` → model by ID (404 if missing)
 - `POST /models/` → create model (**API key required**)
 - `PATCH /models/{id}` → partial update (**API key required**)
@@ -298,8 +298,11 @@ curl -Method POST "http://127.0.0.1:8000/models/" `
 ```
 
 ### Records (MarketRecord)
-- `GET /models/{id}/records` → list records for model
+- `GET /models/{id}/records` → list records for model (optional: `?year=`, `?min_price=`, `?max_price=`, `?skip=`, `?limit=`)
 - `POST /models/{id}/records` → add a record (**API key required**, 404 if model missing)
+- `GET /models/{id}/records/{record_id}` → single record (404 if missing or wrong model)
+- `PATCH /models/{id}/records/{record_id}` → partial update (**API key required**)
+- `DELETE /models/{id}/records/{record_id}` → delete record (**API key required**)
 
 Example create record:
 ```bash
