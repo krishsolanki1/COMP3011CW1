@@ -19,6 +19,7 @@ Built with **FastAPI**, **SQLAlchemy ORM**, **Alembic**, **SQLite**, and **pytes
 - [Smoke checks (manual)](#smoke-checks-manual)
 - [Testing](#testing)
 - [API overview](#api-overview)
+- [Deployment (PythonAnywhere)](#deployment-pythonanywhere)
 - [Troubleshooting](#troubleshooting)
 - [GenAI usage](#genai-usage)
 
@@ -316,6 +317,69 @@ curl -X POST "http://127.0.0.1:8000/models/1/records"   -H "X-API-Key: super-sec
   - returns `{ model_id, model_name, trend: [ {year, average_price, num_records}, ... ] }`
 - `GET /analytics/top-models?year=YYYY&limit=N`
   - returns `{ year, results: [ {model_id, model_name, average_price, num_records}, ... ] }`
+
+---
+
+## Deployment (PythonAnywhere)
+
+PythonAnywhere's free "Beginner" tier hosts the API at a public URL with persistent SQLite storage.
+
+### One-time setup
+
+**1. Create a free account** at https://www.pythonanywhere.com
+
+**2. Open a Bash console** and clone the repo:
+```bash
+git clone https://github.com/<your-username>/<your-repo>.git
+cd <your-repo>
+```
+
+**3. Create a virtualenv and install deps:**
+```bash
+mkvirtualenv --python=python3.11 bmwapi
+pip install -r requirements.txt
+```
+
+**4. Create a `.env` file** (use the absolute path — note 4 slashes for SQLite):
+```env
+DATABASE_URL=sqlite:////home/<username>/<repo>/app.db
+API_KEY=<choose-a-secret-key>
+```
+
+**5. Run migrations and seed data:**
+```bash
+alembic upgrade head
+python scripts/import_bmw.py --reset
+```
+
+**6. Set up the web app:**
+- Go to the **Web** tab → **Add a new web app**
+- Domain: `<username>.pythonanywhere.com`
+- Framework: **Manual configuration** → Python 3.11
+
+**7. Configure the web app settings:**
+- **Source code**: `/home/<username>/<repo>`
+- **WSGI configuration file**: click the link and replace the entire content with:
+  ```python
+  import sys
+  sys.path.insert(0, '/home/<username>/<repo>')
+  from wsgi import application
+  ```
+- **Virtualenv**: `/home/<username>/.virtualenvs/bmwapi`
+
+**8. Click Reload** — the API is now live at:
+```
+https://<username>.pythonanywhere.com/docs
+```
+
+### Updating after a git push
+
+```bash
+# In a PythonAnywhere Bash console:
+cd <repo>
+git pull
+# Then click Reload in the Web tab
+```
 
 ---
 
