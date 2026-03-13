@@ -11,9 +11,26 @@ from app.db.models import CarModel
 _UPDATABLE_FIELDS = {"name", "series", "body_style", "fuel_type", "transmission"}
 
 
-def list_car_models(db: Session) -> Sequence[CarModel]:
-    stmt = select(CarModel).order_by(CarModel.id)
-    return db.scalars(stmt).all()
+def list_car_models(
+    db: Session,
+    *,
+    name: str | None = None,
+    series: str | None = None,
+    fuel_type: str | None = None,
+    transmission: str | None = None,
+    skip: int = 0,
+    limit: int = 100,
+) -> Sequence[CarModel]:
+    stmt = select(CarModel)
+    if name:
+        stmt = stmt.where(CarModel.name.ilike(f"%{name}%"))
+    if series:
+        stmt = stmt.where(CarModel.series.ilike(f"%{series}%"))
+    if fuel_type:
+        stmt = stmt.where(CarModel.fuel_type == fuel_type)
+    if transmission:
+        stmt = stmt.where(CarModel.transmission == transmission)
+    return db.scalars(stmt.order_by(CarModel.id).offset(skip).limit(limit)).all()
 
 
 def get_car_model(db: Session, car_model_id: int) -> CarModel | None:

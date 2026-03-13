@@ -10,13 +10,24 @@ from app.db.models import MarketRecord
 _UPDATABLE_FIELDS = {"year", "price", "sales_volume"}
 
 
-def list_records_for_model(db: Session, car_model_id: int) -> Sequence[MarketRecord]:
-    stmt = (
-        select(MarketRecord)
-        .where(MarketRecord.car_model_id == car_model_id)
-        .order_by(MarketRecord.year)
-    )
-    return db.scalars(stmt).all()
+def list_records_for_model(
+    db: Session,
+    car_model_id: int,
+    *,
+    year: int | None = None,
+    min_price: float | None = None,
+    max_price: float | None = None,
+    skip: int = 0,
+    limit: int = 200,
+) -> Sequence[MarketRecord]:
+    stmt = select(MarketRecord).where(MarketRecord.car_model_id == car_model_id)
+    if year is not None:
+        stmt = stmt.where(MarketRecord.year == year)
+    if min_price is not None:
+        stmt = stmt.where(MarketRecord.price >= min_price)
+    if max_price is not None:
+        stmt = stmt.where(MarketRecord.price <= max_price)
+    return db.scalars(stmt.order_by(MarketRecord.year).offset(skip).limit(limit)).all()
 
 
 def get_record(db: Session, record_id: int) -> MarketRecord | None:
