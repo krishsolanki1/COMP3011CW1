@@ -456,4 +456,4 @@ git pull
 
 ## GenAI usage
 
-GenAI (ChatGPT) was used as a development assistant for scaffolding, debugging and documentation drafting. All generated suggestions were reviewed, tested, and adapted before inclusion in the final submission. The final implementation and design decisions are my own.
+GenAI tools (ChatGPT and Claude Code) were used throughout development for scaffolding, debugging, understanding new technologies (ASGI/WSGI bridging, MCP protocol), and documentation drafting. All generated suggestions were reviewed, tested, and adapted before inclusion. Full declaration and conversation logs are in the technical report appendix.
